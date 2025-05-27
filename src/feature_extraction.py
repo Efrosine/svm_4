@@ -13,7 +13,7 @@ from config import (VALUE_THRESHOLD, OUTPUT_DIR, FEATURES_DIR,
 
 def extract_features(hsv_img):
     """
-    Extract features from a HSV image.
+    Extract features from a HSV image using manual loops.
     
     Args:
         hsv_img (numpy.ndarray): HSV image
@@ -21,12 +21,27 @@ def extract_features(hsv_img):
     Returns:
         tuple: (mean_saturation, black_spot_ratio)
     """
-    # Extract mean saturation (S channel)
-    mean_saturation = np.mean(hsv_img[:, :, 1])
+    # Get image dimensions
+    height, width = hsv_img.shape[:2]
+    total_pixels = height * width
     
-    # Calculate black spot ratio (percentage of pixels where V < VALUE_THRESHOLD)
-    black_spots = hsv_img[:, :, 2] < VALUE_THRESHOLD
-    black_spot_ratio = np.sum(black_spots) / black_spots.size
+    # Initialize counters
+    saturation_sum = 0.0
+    black_spot_count = 0
+    
+    # Extract mean saturation (S channel) and black spot ratio using manual loops
+    for y in range(height):
+        for x in range(width):
+            # Add saturation value to sum
+            saturation_sum += hsv_img[y, x, 1]
+            
+            # Check if this pixel is a black spot (V < VALUE_THRESHOLD)
+            if hsv_img[y, x, 2] < VALUE_THRESHOLD:
+                black_spot_count += 1
+    
+    # Calculate mean saturation and black spot ratio
+    mean_saturation = saturation_sum / total_pixels
+    black_spot_ratio = black_spot_count / total_pixels
     
     return mean_saturation, black_spot_ratio
 
