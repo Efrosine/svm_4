@@ -33,6 +33,7 @@ class LinearSVM:
     def normalize_features(self, X):
         """
         Normalize features using means and standard deviations from training.
+        Manual implementation without using NumPy's statistical functions.
         
         Args:
             X (numpy.ndarray): Feature matrix
@@ -40,16 +41,39 @@ class LinearSVM:
         Returns:
             numpy.ndarray: Normalized features
         """
-        if self.feature_means is None or self.feature_stds is None:
-            # If not yet computed, calculate them (training phase)
-            self.feature_means = np.mean(X, axis=0)
-            self.feature_stds = np.std(X, axis=0)
-            
-        # Handle zero standard deviation (constant features)
-        safe_stds = np.where(self.feature_stds == 0, 1.0, self.feature_stds)
+        n_samples, n_features = X.shape
         
-        # Normalize
-        X_norm = (X - self.feature_means) / safe_stds
+        if self.feature_means is None or self.feature_stds is None:
+            # If not yet computed, calculate them manually (training phase)
+            self.feature_means = np.zeros(n_features)
+            self.feature_stds = np.zeros(n_features)
+            
+            # Calculate means manually
+            for j in range(n_features):
+                feature_sum = 0.0
+                for i in range(n_samples):
+                    feature_sum += X[i, j]
+                self.feature_means[j] = feature_sum / n_samples
+            
+            # Calculate standard deviations manually
+            for j in range(n_features):
+                variance_sum = 0.0
+                for i in range(n_samples):
+                    variance_sum += (X[i, j] - self.feature_means[j]) ** 2
+                variance = variance_sum / n_samples
+                self.feature_stds[j] = np.sqrt(variance)  # Still using numpy for square root
+        
+        # Handle zero standard deviation (constant features) manually
+        safe_stds = np.zeros_like(self.feature_stds)
+        for j in range(len(self.feature_stds)):
+            safe_stds[j] = 1.0 if self.feature_stds[j] == 0 else self.feature_stds[j]
+        
+        # Normalize manually
+        X_norm = np.zeros_like(X)
+        for i in range(n_samples):
+            for j in range(n_features):
+                X_norm[i, j] = (X[i, j] - self.feature_means[j]) / safe_stds[j]
+                
         return X_norm
     
     def train(self, X, y):
