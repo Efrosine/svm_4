@@ -307,3 +307,11 @@ The main function executes the following key steps:
 ```
 cd /home/efrosine/Desktop/project/svm_4 && source venv/bin/activate && python main.py
 ```
+
+source venv/bin/activate && python main.py --mode extract --dataset dataset/apple --save-features output/features_test_extract.csv
+
+source venv/bin/activate && python main.py --mode train --feature-path output/features_test_extract.csv --save-model output/test_model.csv
+
+source venv/bin/activate && python main.py --mode test --load-model output/test_model.csv --dataset dataset/apple
+
+source venv/bin/activate && python main.py --mode test --load-model output/test_model.csv --image "test_dir/0bc40cc3-6a85-480e-a22f-967a866a56a1\_\_\_JR_FrgE.S 2784.JPG"
