@@ -41,12 +41,13 @@ class LinearSVM:
         Returns:
             numpy.ndarray: Normalized features
         """
+        import math  # For sqrt function
         n_samples, n_features = X.shape
         
         if self.feature_means is None or self.feature_stds is None:
             # If not yet computed, calculate them manually (training phase)
-            self.feature_means = np.zeros(n_features)
-            self.feature_stds = np.zeros(n_features)
+            self.feature_means = [0.0] * n_features
+            self.feature_stds = [0.0] * n_features
             
             # Calculate means manually
             for j in range(n_features):
@@ -61,14 +62,14 @@ class LinearSVM:
                 for i in range(n_samples):
                     variance_sum += (X[i, j] - self.feature_means[j]) ** 2
                 variance = variance_sum / n_samples
-                self.feature_stds[j] = np.sqrt(variance)  # Still using numpy for square root
+                self.feature_stds[j] = math.sqrt(variance)  # Using Python's math.sqrt
         
         # Handle zero standard deviation (constant features) manually
-        safe_stds = np.zeros_like(self.feature_stds)
+        safe_stds = [0.0] * len(self.feature_stds)
         for j in range(len(self.feature_stds)):
             safe_stds[j] = 1.0 if self.feature_stds[j] == 0 else self.feature_stds[j]
         
-        # Normalize manually
+        # Normalize manually - still using numpy arrays for output compatibility
         X_norm = np.zeros_like(X)
         for i in range(n_samples):
             for j in range(n_features):
@@ -92,32 +93,59 @@ class LinearSVM:
         
         # Initialize weights
         n_samples, n_features = X_norm.shape
-        self.w = np.zeros(n_features)
+        self.w = [0.0] * n_features  # Manual zero initialization
         self.b = 0.0
         self.loss_history = []
         
         # Gradient descent optimization
         for epoch in range(self.epochs):
-            # Compute margin values
-            margins = y * (np.dot(X_norm, self.w) + self.b)
+            # Compute margin values - manual dot product
+            margins = [0] * n_samples
+            for i in range(n_samples):
+                dot_product = 0.0
+                for j in range(n_features):
+                    dot_product += X_norm[i, j] * self.w[j]
+                margins[i] = y[i] * (dot_product + self.b)
             
             # Find misclassified points
-            misclassified = margins < 1
+            misclassified = []
+            for i in range(n_samples):
+                if margins[i] < 1:
+                    misclassified.append(i)
             
-            # Compute gradients
-            dw = (self.w / self.regularization) - np.sum(
-                y[misclassified].reshape(-1, 1) * X_norm[misclassified], axis=0
-            )
-            db = -np.sum(y[misclassified])
+            # Compute weight gradient - manual implementation
+            dw = [0.0] * n_features
+            for j in range(n_features):
+                # Regularization term
+                dw[j] = self.w[j] / self.regularization
+                
+                # Gradient term from misclassified points
+                for i in misclassified:
+                    dw[j] -= y[i] * X_norm[i, j]
+            
+            # Compute bias gradient
+            db = 0.0
+            for i in misclassified:
+                db -= y[i]
             
             # Update weights and bias
-            self.w -= self.learning_rate * dw
+            for j in range(n_features):
+                self.w[j] -= self.learning_rate * dw[j]
             self.b -= self.learning_rate * db
             
-            # Calculate loss for monitoring
-            loss = (0.5 / self.regularization) * np.dot(self.w, self.w) + \
-                   np.sum(np.maximum(0, 1 - margins)) / n_samples
+            # Calculate loss for monitoring (manual implementation)
+            regularization_term = 0.0
+            for j in range(n_features):
+                regularization_term += self.w[j] * self.w[j]
+            regularization_term *= 0.5 / self.regularization
             
+            hinge_loss = 0.0
+            for i in range(n_samples):
+                hinge_term = max(0, 1 - margins[i])
+                hinge_loss += hinge_term
+            hinge_loss /= n_samples
+            
+            loss = regularization_term + hinge_loss
             self.loss_history.append(loss)
             
             # Optional: print loss every 100 epochs
@@ -125,11 +153,26 @@ class LinearSVM:
                 print(f"Epoch {epoch+1}/{self.epochs}, Loss: {loss:.4f}")
         
         # Identify support vectors (points near the margin)
-        margins = y * (np.dot(X_norm, self.w) + self.b)
+        # Recalculate margins with final weights
+        margins = [0] * n_samples
+        for i in range(n_samples):
+            dot_product = 0.0
+            for j in range(n_features):
+                dot_product += X_norm[i, j] * self.w[j]
+            margins[i] = y[i] * (dot_product + self.b)
+        
         # Support vectors are points close to the margin (within some epsilon)
         epsilon = 1e-3
-        sv_indices = np.where(np.abs(margins - 1.0) < epsilon)[0]
-        self.support_vectors = X_norm[sv_indices]
+        sv_indices = []
+        for i in range(n_samples):
+            if abs(margins[i] - 1.0) < epsilon:
+                sv_indices.append(i)
+        
+        # Store support vectors
+        if sv_indices:
+            self.support_vectors = X_norm[sv_indices]
+        else:
+            self.support_vectors = None
         
         return self
         
@@ -146,13 +189,27 @@ class LinearSVM:
         # Normalize features
         X_norm = self.normalize_features(X)
         
-        # Compute decision function
-        decision = np.dot(X_norm, self.w) + self.b
+        # Compute decision function manually
+        n_samples = X_norm.shape[0]
+        n_features = len(self.w)
+        decision = [0.0] * n_samples
         
-        # Convert to class labels
-        y_pred = np.sign(decision)
+        for i in range(n_samples):
+            dot_product = 0.0
+            for j in range(n_features):
+                dot_product += X_norm[i, j] * self.w[j]
+            decision[i] = dot_product + self.b
         
-        return y_pred
+        # Convert to class labels manually
+        y_pred = [0] * n_samples
+        for i in range(n_samples):
+            if decision[i] > 0:
+                y_pred[i] = 1
+            else:
+                y_pred[i] = -1
+        
+        # Convert back to numpy array for compatibility with rest of code
+        return np.array(y_pred)
         
     def decision_function(self, X):
         """
@@ -167,8 +224,19 @@ class LinearSVM:
         # Normalize features
         X_norm = self.normalize_features(X)
         
-        # Compute distance to hyperplane
-        return np.dot(X_norm, self.w) + self.b
+        # Compute distance to hyperplane manually
+        n_samples = X_norm.shape[0]
+        n_features = len(self.w)
+        decision = [0.0] * n_samples
+        
+        for i in range(n_samples):
+            dot_product = 0.0
+            for j in range(n_features):
+                dot_product += X_norm[i, j] * self.w[j]
+            decision[i] = dot_product + self.b
+            
+        # Convert back to numpy array for compatibility with rest of code
+        return np.array(decision)
 
     def plot_loss_curve(self):
         """
