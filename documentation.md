@@ -314,4 +314,4 @@ source venv/bin/activate && python main.py --mode train --feature-path output/fe
 
 source venv/bin/activate && python main.py --mode test --load-model output/test_model.csv --dataset dataset/apple
 
-source venv/bin/activate && python main.py --mode test --load-model output/test_model.csv --image "test_dir/0bc40cc3-6a85-480e-a22f-967a866a56a1\_\_\_JR_FrgE.S 2784.JPG"
+source venv/bin/activate && python main.py --mode test --load-model output/test_model.csv --image "dataset/apple/apple scab/f3303560-12ce-4e37-b62c-bfb5aad8aa0d\_\_\_FREC_Scab 3332.JPG"

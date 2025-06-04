@@ -540,6 +540,13 @@ def evaluate_pipeline(args, svm=None, X_test=None, y_test=None):
     print("\nMaking predictions...")
     y_pred = svm.predict(X_test)
     
+    # For single image testing, print a clear classification result
+    if args.image:
+        prediction_label = CLASS_HEALTHY if y_pred[0] == 1 else CLASS_APPLE_SCAB
+        print("\n" + "="*50)
+        print(f"CLASSIFICATION RESULT: {prediction_label.upper()}")
+        print("="*50 + "\n")
+    
     # Compute evaluation metrics
     print("\nEvaluating classifier...")
     metrics = evaluate_classifier(y_test, y_pred)
